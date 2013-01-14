@@ -26,14 +26,16 @@ module Fluent
 class SplunkOutput < BufferedOutput
   Plugin.register_output('splunk', self)
 
-  config_param :host, :string, :default => nil # TODO: auto-detect
   config_param :protocol, :string, :default => 'storm'
-  config_param :source, :string, :default => 'fluent:{TAG}'
-  config_param :sourcetype, :string, :default => 'fluent'
-
   config_param :access_token, :string, :default => nil # TODO: required
   config_param :api_hostname, :string, :default => 'api.splunkstorm.com'
   config_param :project_id, :string, :default => nil # TODO: required
+
+  config_param :host, :string, :default => nil # TODO: auto-detect
+  config_param :source, :string, :default => 'fluent:{TAG}'
+  config_param :sourcetype, :string, :default => 'fluent'
+
+  config_param :format, :string, :default => 'json'
 
   def initialize
     super
@@ -43,23 +45,56 @@ class SplunkOutput < BufferedOutput
   def configure(conf)
     super
 
+    case @format
+    when 'json'
+      @formatter = lambda { |record|
+        record.to_json
+      }
+    when 'field'
+      @formatter = lambda { |record|
+        record_to_fields(record)
+      }
+    when 'text'
+      @formatter = lambda { |record|
+        message = record['message']
+        record.delete('message')
+        if record.length == 0
+          message
+        else
+          "[#{record_to_fields(record)}] #{message}"
+        end
+      }
+    end
+
     @base_url = "https://#{@api_hostname}/1/inputs/http?index=#{@project_id}&sourcetype=#{@sourcetype}"
     @base_url += "&host=#{@host}" if @host
+  end
+
+  def record_to_fields(record)
+    record.map {|k,v| v == nil ? "#{k}=" : "#{k}=\"#{v}\""}.join(' ')
   end
 
   def start
     super
     @http = Net::HTTP::Persistent.new 'fluentd-plugin-splunk'
     @http.headers['Content-Type'] = 'text/plain'
+    $log.debug "initialized for #{@protocol}"
+    $log.debug " api_hostname: #{@api_hostname}"
+    $log.debug " project_id: #{@project_id}"
   end
 
   def shutdown
-    @http.shutdown
+    # NOTE: call super before @http.shutdown because super may flush final output
     super
+
+    @http.shutdown
+    $log.debug "shutdown from #{@protocol}"
   end
 
   def format(tag, time, record)
-    [tag, time, record].to_msgpack
+    record.delete('time')
+    event = "#{time}: #{@formatter.call(record)}\n"
+    [tag, event].to_msgpack
   end
 
   def source_for_tag(tag)
@@ -67,11 +102,9 @@ class SplunkOutput < BufferedOutput
   end
 
   def chunk_to_buffers(chunk)
-    # rebuild buffer for each tag
     buffers = {}
-    chunk.msgpack_each do |tag, time, record|
-      messages = (buffers[source_for_tag(tag)] ||= [])
-      messages << "#{time}: #{record.to_json}\n"
+    chunk.msgpack_each do |tag, event|
+      (buffers[source_for_tag(tag)] ||= []) << event
     end
     return buffers
   end
@@ -82,7 +115,7 @@ class SplunkOutput < BufferedOutput
       post = Net::HTTP::Post.new uri.request_uri
       post.basic_auth 'x', @access_token
       post.body = messages.join('')
-      $log.debug "HTTP request: #{uri}"
+      $log.debug "HTTP POST: #{uri}"
       response = @http.request uri, post
       $log.debug "HTTP response: #{response.code}"
       $log.error response.message if response.code != "200"
