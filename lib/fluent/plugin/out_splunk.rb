@@ -29,7 +29,7 @@ class SplunkOutput < BufferedOutput
   config_param :host, :string, :default => nil # TODO: auto-detect
   config_param :protocol, :string, :default => 'storm'
   config_param :source, :string, :default => 'fluent:{TAG}'
-  config_param :source_type, :string, :default => 'fluent'
+  config_param :sourcetype, :string, :default => 'fluent'
 
   config_param :access_token, :string, :default => nil # TODO: required
   config_param :api_hostname, :string, :default => 'api.splunkstorm.com'
@@ -43,7 +43,7 @@ class SplunkOutput < BufferedOutput
   def configure(conf)
     super
 
-    @base_url = "https://#{@api_hostname}/1/inputs/http?index=#{@project_id}&sourcetype=#{@source_type}"
+    @base_url = "https://#{@api_hostname}/1/inputs/http?index=#{@project_id}&sourcetype=#{@sourcetype}"
     @base_url += "&host=#{@host}" if @host
   end
 
