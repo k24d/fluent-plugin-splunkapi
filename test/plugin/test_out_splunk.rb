@@ -20,7 +20,7 @@ class SplunkOutputTest < Test::Unit::TestCase
     d = create_driver
     assert_equal 'storm', d.instance.protocol
     assert_equal 'fluent:{TAG}', d.instance.source
-    assert_equal 'fluent', d.instance.source_type
+    assert_equal 'fluent', d.instance.sourcetype
   end
 
   def test_write
