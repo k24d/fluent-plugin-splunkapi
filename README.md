@@ -48,8 +48,8 @@ Put the following lines to your fluent.conf
 
       # host: 'source' parameter passed to Splunk
       #
-      # This option may include "{TAG}", which is replaced by fluet tags at runtime
-      source fluent:{TAG}
+      # "{TAG}" will be replaced by tags at runtime
+      source {TAG}
 
       # sourcetype: 'sourcetype' parameter passed to Splunk
       sourcetype fluent
@@ -89,8 +89,8 @@ Put the following lines to your fluent.conf
       # 
       # Make sure that this value is large enough to make successive API calls.
       # Note that a different source produces a different API POST, each of which
-      # costs two or more seconds.  If you set "source fluent:{TAG}" above and
-      # this 'match' section recieves many tags, the API requests may take long.
+      # costs two or more seconds.  If you include "{TAG}" in the source parameter and
+      # this 'match' section recieves many tags, a single flush may take long time.
       # (Run fluentd with -v to see verbose logs.)
       flush_interval 60s
     </match>

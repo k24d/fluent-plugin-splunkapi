@@ -32,7 +32,7 @@ class SplunkOutput < BufferedOutput
   config_param :project_id, :string, :default => nil # TODO: required
 
   config_param :host, :string, :default => nil # TODO: auto-detect
-  config_param :source, :string, :default => 'fluent:{TAG}'
+  config_param :source, :string, :default => '{TAG}'
   config_param :sourcetype, :string, :default => 'fluent'
 
   config_param :format, :string, :default => 'json'
@@ -44,6 +44,13 @@ class SplunkOutput < BufferedOutput
 
   def configure(conf)
     super
+
+    case @source
+    when '{TAG}'
+      @source_formatter = lambda { |tag| tag }
+    else
+      @source_formatter = lambda { |tag| @source.sub('{TAG}', tag) }
+    end
 
     case @format
     when 'json'
@@ -97,14 +104,10 @@ class SplunkOutput < BufferedOutput
     [tag, event].to_msgpack
   end
 
-  def source_for_tag(tag)
-    @source.sub('{TAG}', tag)
-  end
-
   def chunk_to_buffers(chunk)
     buffers = {}
     chunk.msgpack_each do |tag, event|
-      (buffers[source_for_tag(tag)] ||= []) << event
+      (buffers[@source_formatter.call(tag)] ||= []) << event
     end
     return buffers
   end
