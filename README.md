@@ -54,6 +54,10 @@ Put the following lines to your fluent.conf
       # sourcetype: 'sourcetype' parameter passed to Splunk
       sourcetype fluent
 
+      # time_format: the time format of each event
+      # value: 'none', 'unixtime', or time format string
+      time_format unixtime
+
       # format: the text format of each event
       # value: 'json', 'field', or 'text'
       #

@@ -35,11 +35,13 @@ class SplunkOutput < BufferedOutput
   config_param :source, :string, :default => '{TAG}'
   config_param :sourcetype, :string, :default => 'fluent'
 
+  config_param :time_format, :string, :default => nil
   config_param :format, :string, :default => 'json'
 
   def initialize
     super
     require 'net/http/persistent'
+    require 'time'
   end
 
   def configure(conf)
@@ -50,6 +52,16 @@ class SplunkOutput < BufferedOutput
       @source_formatter = lambda { |tag| tag }
     else
       @source_formatter = lambda { |tag| @source.sub('{TAG}', tag) }
+    end
+
+    case @time_format
+    when 'none'
+      @time_formatter = nil
+    when 'unixtime'
+      @time_formatter = lambda { |time| time.to_s }
+    else
+      @timef = TimeFormatter.new(@time_format, @localtime)
+      @time_formatter = lambda { |time| @timef.format(time) }
     end
 
     case @format
@@ -99,8 +111,15 @@ class SplunkOutput < BufferedOutput
   end
 
   def format(tag, time, record)
+    if @time_formatter
+      time_str = "#{@time_formatter.call(time)}: "
+    else
+      time_str = ''
+    end
+
     record.delete('time')
-    event = "#{time}: #{@formatter.call(record)}\n"
+    event = time_str + @formatter.call(record) + "\n"
+
     [tag, event].to_msgpack
   end
 
