@@ -78,9 +78,9 @@ class SplunkOutput < BufferedOutput
       @formatter = lambda { |record|
         record.to_json
       }
-    when 'field'
+    when 'kvp'
       @formatter = lambda { |record|
-        record_to_fields(record)
+        record_to_kvp(record)
       }
     when 'text'
       @formatter = lambda { |record|
@@ -89,7 +89,7 @@ class SplunkOutput < BufferedOutput
         if record.length == 0
           message
         else
-          "[#{record_to_fields(record)}] #{message}"
+          "[#{record_to_kvp(record)}] #{message}"
         end
       }
     end
@@ -105,7 +105,7 @@ class SplunkOutput < BufferedOutput
     end
   end
 
-  def record_to_fields(record)
+  def record_to_kvp(record)
     record.map {|k,v| v == nil ? "#{k}=" : "#{k}=\"#{v}\""}.join(' ')
   end
 

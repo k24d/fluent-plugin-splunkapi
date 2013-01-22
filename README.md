@@ -1,6 +1,8 @@
 # Fluent::Plugin::Splunk
 
-Fluent plugin for splunk output, using the following APIs:
+Splunk output plugin for Fluent event collector.
+
+This plugin makes use of the following APIs:
 
 Splunk REST API:
 
@@ -77,27 +79,31 @@ Put the following lines to your fluent.conf
       # sourcetype: 'sourcetype' parameter passed to Splunk
       sourcetype fluent
 
+      #
+      # Formatting Parameters
+      #
+
       # time_format: the time format of each event
       # value: 'none', 'unixtime', or time format string
       time_format unixtime
 
       # format: the text format of each event
-      # value: 'json', 'field', or 'text'
+      # value: 'json', 'kvp', or 'text'
       #
       # input = {"x":1, "y":"xyz", "message":"Hello, world!"}
       # 
       # 'json' is JSON encoding:
       #   {"x":1,"y":"xyz","message":"Hello, world!"}
       # 
-      # 'field' is "key=value" pairs, which is automatically detected as fields by Splunk:
+      # 'kvp' is "key=value" pairs, which is automatically detected as fields by Splunk:
       #   x="1" y="xyz" message="Hello, world!"
       # 
-      # 'text' is like field, but "message" is treated specially so as not to be a field:
+      # 'text' outputs the value of "message" as is, with "key=value" pairs for others:
       #   [x="1" y="xyz"] Hello, world!
       format json
 
       #
-      # Buffe Parameters
+      # Buffering Parameters
       #
 
       # Standard parameters for buffering.  See documentation for details:
