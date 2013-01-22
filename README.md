@@ -26,12 +26,12 @@ Or install it yourself as:
 
     $ gem install fluent-plugin-splunkapi
 
-## Usage
+## Configuration
 
-Put the following lines to your fluent.conf
+Put the following lines to your fluent.conf:
 
     <match **>
-      type splunk
+      type splunkapi
 
       #
       # Splnk Server
@@ -126,6 +126,53 @@ Put the following lines to your fluent.conf
       # this 'match' section recieves many tags, a single flush may take long time.
       # (Run fluentd with -v to see verbose logs.)
       flush_interval 60s
+    </match>
+
+## Example
+
+    # Input from applications
+    <source>
+      type forward
+    </source>
+
+    # Input from log files
+    <source>
+      type tail
+      path /var/log/apache2/ssl_access.log
+      tag ssl_access.log
+      format /(?<message>.*)/
+      pos_file /var/log/td-agent/ssl_access.log.pos
+    </source>
+
+    # fluent logs in text format
+    <match fluent.*>
+      type splunkapi
+      protocol rest
+      server splunk.example.com:8089
+      auth admin:pass
+      sourcetype fluentd
+      format text
+    </match>
+
+    # log files in text format without timestamp
+    <match *.log>
+      type splunkapi
+      protocol rest
+      server splunk.example.com:8089
+      auth admin:pass
+      sourcetype log
+      time_format none
+      format text
+    </match>
+
+    # application logs in kvp format
+    <match app.**>
+      type splunkapi
+      protocol rest
+      server splunk.example.com:8089
+      auth admin:pass
+      sourcetype app
+      format kvp
     </match>
 
 ## Contributing
