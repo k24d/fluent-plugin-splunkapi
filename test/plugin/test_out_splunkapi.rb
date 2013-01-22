@@ -1,25 +1,26 @@
 require 'helper'
 
-class SplunkOutputTest < Test::Unit::TestCase
+class SplunkAPIOutputTest < Test::Unit::TestCase
   def setup
     Fluent::Test.setup
   end
 
   CONFIG = %[
-#    host test
-#    access_token xxx
-#    project_id xxx
+    protocol rest
+    server localhost:8089
+    verify false
+    auth admin:changeme
   ]
 
   def create_driver(conf=CONFIG, tag='test')
-    Fluent::Test::BufferedOutputTestDriver.new(Fluent::SplunkOutput, tag).configure(conf)
+    Fluent::Test::BufferedOutputTestDriver.new(Fluent::SplunkAPIOutput, tag).configure(conf)
   end
 
   def test_configure
     # default
     d = create_driver
-    assert_equal 'storm', d.instance.protocol
-    assert_equal 'fluent:{TAG}', d.instance.source
+    assert_equal 'rest', d.instance.protocol
+    assert_equal '{TAG}', d.instance.source
     assert_equal 'fluent', d.instance.sourcetype
   end
 

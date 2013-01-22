@@ -23,8 +23,8 @@
 
 module Fluent
 
-class SplunkOutput < BufferedOutput
-  Plugin.register_output('splunk', self)
+class SplunkAPIOutput < BufferedOutput
+  Plugin.register_output('splunkapi', self)
 
   config_param :protocol, :string, :default => 'rest'
 
@@ -111,7 +111,7 @@ class SplunkOutput < BufferedOutput
 
   def start
     super
-    @http = Net::HTTP::Persistent.new 'fluentd-plugin-splunk'
+    @http = Net::HTTP::Persistent.new 'fluentd-plugin-splunkapi'
     @http.verify_mode = OpenSSL::SSL::VERIFY_NONE unless @verify
     @http.headers['Content-Type'] = 'text/plain'
     $log.debug "initialized for #{@base_url}"

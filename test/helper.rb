@@ -22,7 +22,7 @@ unless ENV.has_key?('VERBOSE')
   $log = nulllogger
 end
 
-require 'fluent/plugin/out_splunk'
+require 'fluent/plugin/out_splunkapi'
 
 class Test::Unit::TestCase
 end

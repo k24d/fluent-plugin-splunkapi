@@ -1,4 +1,4 @@
-# Fluent::Plugin::Splunk
+# Fluent::Plugin::SplunkAPI
 
 Splunk output plugin for Fluent event collector.
 
@@ -16,7 +16,7 @@ Splunk Storm API:
 
 Add this line to your application's Gemfile:
 
-    gem 'fluent-plugin-splunk'
+    gem 'fluent-plugin-splunkapi'
 
 And then execute:
 
@@ -24,7 +24,7 @@ And then execute:
 
 Or install it yourself as:
 
-    $ gem install fluent-plugin-splunk
+    $ gem install fluent-plugin-splunkapi
 
 ## Usage
 
@@ -114,7 +114,7 @@ Put the following lines to your fluent.conf
       # buffer_chunk_limit: The maxium size of POST data in a single API call.
       # 
       # This value should be reasonablly small since the current implementation
-      # of out_splunk converts a chunk to POST data on memory before API calls.
+      # of out_splunkapi converts a chunk to POST data on memory before API calls.
       # The default value should be good enough.
       buffer_chunk_limit 8m
 
