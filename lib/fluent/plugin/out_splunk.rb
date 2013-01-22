@@ -26,15 +26,24 @@ module Fluent
 class SplunkOutput < BufferedOutput
   Plugin.register_output('splunk', self)
 
-  config_param :protocol, :string, :default => 'storm'
-  config_param :access_token, :string, :default => nil # TODO: required
-  config_param :api_hostname, :string, :default => 'api.splunkstorm.com'
-  config_param :project_id, :string, :default => nil # TODO: required
+  config_param :protocol, :string, :default => 'rest'
 
+  # for Splunk REST API
+  config_param :server, :string, :default => nil # TODO: required with rest
+  config_param :verify, :bool, :default => true
+  config_param :auth, :string, :default => nil # TODO: required with rest
+
+  # for Splunk Storm API
+  config_param :access_token, :string, :default => nil # TODO: required with storm
+  config_param :api_hostname, :string, :default => 'api.splunkstorm.com'
+  config_param :project_id, :string, :default => nil # TODO: required with storm
+
+  # Event parameters
   config_param :host, :string, :default => nil # TODO: auto-detect
   config_param :source, :string, :default => '{TAG}'
   config_param :sourcetype, :string, :default => 'fluent'
 
+  # Formatting
   config_param :time_format, :string, :default => nil
   config_param :format, :string, :default => 'json'
 
@@ -85,8 +94,15 @@ class SplunkOutput < BufferedOutput
       }
     end
 
-    @base_url = "https://#{@api_hostname}/1/inputs/http?index=#{@project_id}&sourcetype=#{@sourcetype}"
-    @base_url += "&host=#{@host}" if @host
+    if @protocol == 'rest'
+      @username, @password = @auth.split(':')
+      @base_url = "https://#{@server}/services/receivers/simple?sourcetype=#{@sourcetype}"
+      @base_url += "&host=#{@host}" if @host
+    elsif @protocol == 'storm'
+      @username, @password = 'x', @access_token
+      @base_url = "https://#{@api_hostname}/1/inputs/http?index=#{@project_id}&sourcetype=#{@sourcetype}"
+      @base_url += "&host=#{@host}" if @host
+    end
   end
 
   def record_to_fields(record)
@@ -96,10 +112,9 @@ class SplunkOutput < BufferedOutput
   def start
     super
     @http = Net::HTTP::Persistent.new 'fluentd-plugin-splunk'
+    @http.verify_mode = OpenSSL::SSL::VERIFY_NONE unless @verify
     @http.headers['Content-Type'] = 'text/plain'
-    $log.debug "initialized for #{@protocol}"
-    $log.debug " api_hostname: #{@api_hostname}"
-    $log.debug " project_id: #{@project_id}"
+    $log.debug "initialized for #{@base_url}"
   end
 
   def shutdown
@@ -107,7 +122,7 @@ class SplunkOutput < BufferedOutput
     super
 
     @http.shutdown
-    $log.debug "shutdown from #{@protocol}"
+    $log.debug "shutdown from #{@base_url}"
   end
 
   def format(tag, time, record)
@@ -135,7 +150,7 @@ class SplunkOutput < BufferedOutput
     chunk_to_buffers(chunk).each do |source, messages|
       uri = URI @base_url + "&source=#{source}"
       post = Net::HTTP::Post.new uri.request_uri
-      post.basic_auth 'x', @access_token
+      post.basic_auth @username, @password
       post.body = messages.join('')
       $log.debug "HTTP POST: #{uri}"
       response = @http.request uri, post

@@ -3,7 +3,7 @@ $:.push File.expand_path("../lib", __FILE__)
 
 Gem::Specification.new do |gem|
   gem.name          = "fluent-plugin-splunk"
-  gem.version       = "0.0.1"
+  gem.version       = "0.0.2"
   gem.authors       = ["Keisuke Nishida"]
   gem.email         = ["knishida@bizmobile.co.jp"]
   gem.description   = %q{Fluent plugin for splunk output}

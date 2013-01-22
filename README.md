@@ -1,8 +1,14 @@
 # Fluent::Plugin::Splunk
 
-Fluent plugin for splunk output.
+Fluent plugin for splunk output, using the following APIs:
 
-Only Splunk Storm is supported for now.
+Splunk REST API:
+
+  http://docs.splunk.com/Documentation/Splunk/latest/RESTAPI/RESTinput
+
+Splunk Storm API:
+
+  http://docs.splunk.com/Documentation/Storm/latest/User/UseStormsRESTAPI
 
 ## Installation
 
@@ -29,15 +35,32 @@ Put the following lines to your fluent.conf
       # Splnk Server
       #
 
+      # protocol: API protocol version
+      # values: 'rest', 'storm'
+      protocol rest
+
+      # server: Splunk server host and port
+      server localhost:8089
+
+      # verify: SSL server verification
+      #verify false
+
+      # auth: username and password
+      auth admin:pass
+
+      #
+      # Splnk Storm
+      #
+
       # protocol: API protocol version.
-      # values: 'storm'
-      protocol storm
+      # values: 'rest', 'storm'
+      #protocol storm
 
       # access_token: for Splunk Storm
-      access_token YOUR-ACCESS-TOKEN
+      #access_token YOUR-ACCESS-TOKEN
 
       # access_token: for Splunk Storm
-      project_id YOUR-PROJECT-ID
+      #project_id YOUR-PROJECT-ID
 
       #
       # Event Parameters
