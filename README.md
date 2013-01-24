@@ -128,9 +128,9 @@ Put the following lines to your fluent.conf:
 
       # flush_interval: The interval of API requests.
       # 
-      # Make sure that this value is large enough to make successive API calls.
-      # Note that a different source produces a different API POST, each of which
-      # costs two or more seconds.  If you include "{TAG}" in the source parameter and
+      # Make sure that this value is sufficiently large to make successive API calls.
+      # Note that a different 'source' creates a different API POST, each of which may
+      # take two or more seconds.  If you include "{TAG}" in the source parameter and
       # this 'match' section recieves many tags, a single flush may take long time.
       # (Run fluentd with -v to see verbose logs.)
       flush_interval 60s
