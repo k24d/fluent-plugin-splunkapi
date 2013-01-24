@@ -38,13 +38,16 @@ Put the following lines to your fluent.conf:
       #
 
       # protocol: API protocol version
-      # values: 'rest', 'storm'
+      # values: rest, storm
+      # default: rest
       protocol rest
 
       # server: Splunk server host and port
+      # default: localhost:8089
       server localhost:8089
 
       # verify: SSL server verification
+      # default: true
       #verify false
 
       # auth: username and password
@@ -55,7 +58,8 @@ Put the following lines to your fluent.conf:
       #
 
       # protocol: API protocol version.
-      # values: 'rest', 'storm'
+      # values: rest, storm
+      # default: rest
       #protocol storm
 
       # access_token: for Splunk Storm
@@ -72,11 +76,13 @@ Put the following lines to your fluent.conf:
       host YOUR-HOSTNAME
 
       # host: 'source' parameter passed to Splunk
+      # default: {TAG}
       #
-      # "{TAG}" will be replaced by tags at runtime
+      # "{TAG}" will be replaced by fluent tags at runtime
       source {TAG}
 
       # sourcetype: 'sourcetype' parameter passed to Splunk
+      # default: fluent
       sourcetype fluent
 
       #
@@ -84,11 +90,13 @@ Put the following lines to your fluent.conf:
       #
 
       # time_format: the time format of each event
-      # value: 'none', 'unixtime', or any time format string
+      # value: none, unixtime, or any time format string
+      # default: %Y-%M-%d %H:%M:%S
       #time_format %Y-%M-%d %H:%M:%S
 
       # format: the text format of each event
-      # value: 'json', 'kvp', or 'text'
+      # value: json, kvp, or text
+      # default: json
       #
       # input = {"x":1, "y":"xyz", "message":"Hello, world!"}
       # 

@@ -29,7 +29,7 @@ class SplunkAPIOutput < BufferedOutput
   config_param :protocol, :string, :default => 'rest'
 
   # for Splunk REST API
-  config_param :server, :string, :default => nil # TODO: required with rest
+  config_param :server, :string, :default => 'localhost:8089'
   config_param :verify, :bool, :default => true
   config_param :auth, :string, :default => nil # TODO: required with rest
 
@@ -152,9 +152,8 @@ class SplunkAPIOutput < BufferedOutput
       post = Net::HTTP::Post.new uri.request_uri
       post.basic_auth @username, @password
       post.body = messages.join('')
-      $log.debug "HTTP POST: #{uri}"
+      $log.debug "POST #{uri}"
       response = @http.request uri, post
-      $log.debug "HTTP response: #{response.code}"
       $log.error response.message if response.code != "200"
     end
   end
