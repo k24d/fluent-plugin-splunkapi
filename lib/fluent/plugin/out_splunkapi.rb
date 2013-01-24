@@ -44,7 +44,7 @@ class SplunkAPIOutput < BufferedOutput
   config_param :sourcetype, :string, :default => 'fluent'
 
   # Formatting
-  config_param :time_format, :string, :default => nil
+  config_param :time_format, :string, :default => "%Y-%M-%d %H:%M:%S"
   config_param :format, :string, :default => 'json'
 
   def initialize

@@ -84,8 +84,8 @@ Put the following lines to your fluent.conf:
       #
 
       # time_format: the time format of each event
-      # value: 'none', 'unixtime', or time format string
-      time_format unixtime
+      # value: 'none', 'unixtime', or any time format string
+      #time_format %Y-%M-%d %H:%M:%S
 
       # format: the text format of each event
       # value: 'json', 'kvp', or 'text'
