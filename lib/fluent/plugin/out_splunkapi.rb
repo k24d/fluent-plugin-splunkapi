@@ -44,7 +44,7 @@ class SplunkAPIOutput < BufferedOutput
   config_param :sourcetype, :string, :default => 'fluent'
 
   # Formatting
-  config_param :time_format, :string, :default => "%Y-%M-%d %H:%M:%S"
+  config_param :time_format, :string, :default => 'localtime'
   config_param :format, :string, :default => 'json'
 
   def initialize
@@ -68,6 +68,8 @@ class SplunkAPIOutput < BufferedOutput
       @time_formatter = nil
     when 'unixtime'
       @time_formatter = lambda { |time| time.to_s }
+    when 'localtime'
+      @time_formatter = lambda { |time| Time.at(time).localtime }
     else
       @timef = TimeFormatter.new(@time_format, @localtime)
       @time_formatter = lambda { |time| @timef.format(time) }
