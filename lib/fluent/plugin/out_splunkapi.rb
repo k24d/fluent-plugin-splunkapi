@@ -47,6 +47,9 @@ class SplunkAPIOutput < BufferedOutput
   config_param :time_format, :string, :default => 'localtime'
   config_param :format, :string, :default => 'json'
 
+  config_param :post_retry_max, :integer, :default => 5
+  config_param :post_retry_interval, :integer, :default => 5
+
   def initialize
     super
     require 'net/http/persistent'
@@ -155,8 +158,16 @@ class SplunkAPIOutput < BufferedOutput
       post.basic_auth @username, @password
       post.body = messages.join('')
       $log.debug "POST #{uri}"
-      response = @http.request uri, post
-      $log.error response.message if response.code != "200"
+      # retry up to :post_retry_max times
+      1.upto(@post_retry_max) do |c|
+        response = @http.request uri, post
+        break if response.code != "503"
+        $log.debug "=> #{response.code} (#{response.message})"
+        sleep @post_retry_interval
+        # fluentd will retry processing on exception
+        # FIXME: this may duplicate logs with multiple buffers
+        raise "#{uri}: #{response.message}" if c == @post_retry_max
+      end
     end
   end
 end
