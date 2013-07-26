@@ -75,6 +75,14 @@ Put the following lines to your fluent.conf:
       # host: 'host' parameter passed to Splunk
       host YOUR-HOSTNAME
 
+      # index: 'index' parameter passed to Splunk (REST only)
+      # default: <none>
+      #index main
+
+      # check_index: 'check-index' parameter passed to Splunk (REST only)
+      # default: <none>
+      #check_index false
+
       # host: 'source' parameter passed to Splunk
       # default: {TAG}
       #

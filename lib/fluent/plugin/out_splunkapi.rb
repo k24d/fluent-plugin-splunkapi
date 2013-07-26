@@ -40,6 +40,8 @@ class SplunkAPIOutput < BufferedOutput
 
   # Event parameters
   config_param :host, :string, :default => nil # TODO: auto-detect
+  config_param :index, :string, :default => nil
+  config_param :check_index, :bool, :default => true
   config_param :source, :string, :default => '{TAG}'
   config_param :sourcetype, :string, :default => 'fluent'
 
@@ -103,6 +105,8 @@ class SplunkAPIOutput < BufferedOutput
       @username, @password = @auth.split(':')
       @base_url = "https://#{@server}/services/receivers/simple?sourcetype=#{@sourcetype}"
       @base_url += "&host=#{@host}" if @host
+      @base_url += "&index=#{@index}" if @index
+      @base_url += "&check-index=false" unless @check_index
     elsif @protocol == 'storm'
       @username, @password = 'x', @access_token
       @base_url = "https://#{@api_hostname}/1/inputs/http?index=#{@project_id}&sourcetype=#{@sourcetype}"
