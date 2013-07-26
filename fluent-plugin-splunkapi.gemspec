@@ -3,7 +3,7 @@ $:.push File.expand_path("../lib", __FILE__)
 
 Gem::Specification.new do |gem|
   gem.name          = "fluent-plugin-splunkapi"
-  gem.version       = "0.1.2"
+  gem.version       = "0.1.3"
   gem.authors       = ["Keisuke Nishida"]
   gem.email         = ["knishida@bizmobile.co.jp"]
   gem.description   = %q{Splunk output plugin for Fluent event collector}
