@@ -91,12 +91,13 @@ class SplunkAPIOutput < BufferedOutput
       }
     when 'text'
       @formatter = lambda { |record|
-        message = record['message']
-        record.delete('message')
-        if record.length == 0
-          message
+        # NOTE: never modify 'record' directly
+        record_copy = record.dup
+        record_copy.delete('message')
+        if record_copy.length == 0
+          record['message']
         else
-          "[#{record_to_kvp(record)}] #{message}"
+          "[#{record_to_kvp(record_copy)}] #{record['message']}"
         end
       }
     end
@@ -142,7 +143,7 @@ class SplunkAPIOutput < BufferedOutput
     end
 
     record.delete('time')
-    event = time_str + @formatter.call(record) + "\n"
+    event = "#{time_str}#{@formatter.call(record)}\n"
 
     [tag, event].to_msgpack
   end
