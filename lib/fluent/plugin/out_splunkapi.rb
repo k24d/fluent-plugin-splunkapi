@@ -166,12 +166,23 @@ class SplunkAPIOutput < BufferedOutput
       # retry up to :post_retry_max times
       1.upto(@post_retry_max) do |c|
         response = @http.request uri, post
-        break if response.code != "503"
         $log.debug "=> #{response.code} (#{response.message})"
-        sleep @post_retry_interval
-        # fluentd will retry processing on exception
-        # FIXME: this may duplicate logs with multiple buffers
-        raise "#{uri}: #{response.message}" if c == @post_retry_max
+        if response.code == "200"
+          # success
+          break
+        elsif response.code.match(/^40/)
+          # user error
+          $log.error "#{uri}: #{response.code} (#{response.message})\n#{response.body}"
+          break
+        elsif c < @post_retry_max
+          # retry
+          sleep @post_retry_interval
+          next
+        else
+          # other errors. fluentd will retry processing on exception
+          # FIXME: this may duplicate logs when using multiple buffers
+          raise "#{uri}: #{response.message}"
+        end
       end
     end
   end
