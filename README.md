@@ -12,6 +12,55 @@ Splunk Storm API:
 
   http://docs.splunk.com/Documentation/Storm/latest/User/UseStormsRESTAPI
 
+## Notes
+
+Although this plugin is capable of sending Fluent events directly to
+Splunk servers or Splunk Storm, it is not recommended to do so.
+Please use "Universal Forwarder" as a gateway, as described below.
+
+It is known that this plugin has several issues of performance and
+error handling in dealing with large data sets.  With a local/reliable
+forwarder, you can aggregate a number of events locally and send them
+to a server in bulk.
+
+In short, I'd recommend to install a forwarder in each host, and use
+this plugin to deliver events to the local forwarder:
+
+    <match **>
+      # Deliver events to the local forwarder.
+      type splunkapi
+      protocol rest
+      server 127.0.0.1:8089
+      verify false
+      auth admin:changeme
+
+      # Convert fluent tags to Splunk sources.
+      # If you set an index, "check_index false" is required.
+      host YOUR-HOSTNAME
+      index SOME-INDEX
+      check_index false
+      source {TAG}
+      sourcetype fluent
+
+      # TIMESTAMP: key1="value1" key2="value2" ...
+      time_format unixtime
+      format kvp
+
+      # Memory buffer with a short flush internal.
+      buffer_type memory
+      buffer_queue_limit 16
+      buffer_chunk_limit 8m
+      flush_interval 2s
+    </match>
+
+## Additional Notes
+
+Splunk 5 has a new feature called "Modular Inputs":
+
+http://blogs.splunk.com/2013/04/16/modular-inputs-tools/
+
+My plan is switching to Modular Inputs rather than staying with APIs.
+
 ## Installation
 
 Add this line to your application's Gemfile:
