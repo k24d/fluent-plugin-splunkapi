@@ -36,6 +36,17 @@ class SplunkAPIOutputTest < Test::Unit::TestCase
     assert_equal "#{@time}: {\"a\":1}", result['test'][0].strip
   end
 
+  def test_write_json_with_timestamp
+    d = create_driver [CONFIG, "format json", "timestamp_field true", "time_format unixtime"].join "\n"
+
+    d.emit({"a"=>1}, @time)
+    d.emit({"a"=>2}, @time)
+
+    result = d.run
+    assert_equal 2, result['test'].size
+    assert_equal({"a" => 1, "timestamp" => @time.to_s}, JSON.parse(result['test'][0]))
+  end
+
   def test_write_kvp
     d = create_driver [CONFIG, "format kvp", "time_format unixtime"].join "\n"
 
