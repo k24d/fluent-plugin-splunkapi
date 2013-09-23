@@ -82,22 +82,44 @@ class SplunkAPIOutput < BufferedOutput
 
     case @format
     when 'json'
-      @formatter = lambda { |record|
-        record.to_json
-      }
+      if @time_formatter
+        # TIMESTAMP: {"key1":"value1",...}
+        @formatter = lambda { |time, record|
+          "#{@time_formatter.call(time)}: #{record.to_json}\n"
+        }
+      else
+        # {"key1":"value1",...}
+        @formatter = lambda { |time, record|
+          "#{record.to_json}\n"
+        }
+      end
     when 'kvp'
-      @formatter = lambda { |record|
-        record_to_kvp(record)
-      }
+      if @time_formatter
+        # TIMESTAMP: key1="value1" ...
+        @formatter = lambda { |time, record|
+          "#{@time_formatter.call(time)}: #{record_to_kvp(record)}\n"
+        }
+      else
+        # key1="value1" ...
+        @formatter = lambda { |time, record|
+          "#{record_to_kvp(record)}\n"
+        }
+      end
     when 'text'
-      @formatter = lambda { |record|
+      # TIMESTAMP: [key1="value1" ...] message
+      @formatter = lambda { |time, record|
         # NOTE: never modify 'record' directly
         record_copy = record.dup
         record_copy.delete('message')
         if record_copy.length == 0
-          record['message']
+          attributes = ''
         else
-          "[#{record_to_kvp(record_copy)}] #{record['message']}"
+          attributes = "[#{record_to_kvp(record_copy)}] "
+        end
+        if @time_formatter
+          "#{@time_formatter.call(time)}: #{attributes}#{record['message']}\n"
+        else
+          "#{attributes}#{record['message']}\n"
         end
       }
     end
@@ -136,31 +158,25 @@ class SplunkAPIOutput < BufferedOutput
   end
 
   def format(tag, time, record)
-    if @time_formatter
-      time_str = "#{@time_formatter.call(time)}: "
-    else
-      time_str = ''
-    end
-
-    event = "#{time_str}#{@formatter.call(record)}\n"
-
+    event = @formatter.call(time, record)
     [tag, event].to_msgpack
   end
 
   def chunk_to_buffers(chunk)
     buffers = {}
     chunk.msgpack_each do |tag, event|
-      (buffers[@source_formatter.call(tag)] ||= []) << event
+      source = @source_formatter.call(tag)
+      (buffers[source] ||= []) << event
     end
     return buffers
   end
 
   def write(chunk)
-    chunk_to_buffers(chunk).each do |source, messages|
+    chunk_to_buffers(chunk).each do |source, events|
       uri = URI @base_url + "&source=#{source}"
       post = Net::HTTP::Post.new uri.request_uri
       post.basic_auth @username, @password
-      post.body = messages.join('')
+      post.body = events.join()
       $log.debug "POST #{uri}"
       # retry up to :post_retry_max times
       1.upto(@post_retry_max) do |c|
