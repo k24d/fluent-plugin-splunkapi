@@ -142,7 +142,6 @@ class SplunkAPIOutput < BufferedOutput
       time_str = ''
     end
 
-    record.delete('time')
     event = "#{time_str}#{@formatter.call(record)}\n"
 
     [tag, event].to_msgpack
