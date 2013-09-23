@@ -122,6 +122,13 @@ class SplunkAPIOutput < BufferedOutput
           "#{attributes}#{record['message']}\n"
         end
       }
+    when 'json-predefined'
+      # {"_":"t=TIMESTAMP","key1":"value1",...}
+      @formatter = lambda { |time, record|
+        x = {"_" => "t=#{time}"}
+        x.merge!(record)
+        x.to_json + "\n"
+      }
     end
 
     if @protocol == 'rest'
