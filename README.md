@@ -1,4 +1,4 @@
-# Fluent::Plugin::SplunkAPI
+# Fluent::Plugin::SplunkAPI, a plugin for [Fluentd](http://fluentd.org)
 
 Splunk output plugin for Fluent event collector.
 
