@@ -56,6 +56,8 @@ class SplunkAPIOutput < BufferedOutput
     super
     require 'net/http/persistent'
     require 'time'
+    @idx_indexers = 0
+    @indexers = []
   end
 
   def configure(conf)
@@ -102,16 +104,10 @@ class SplunkAPIOutput < BufferedOutput
       }
     end
 
-    if @protocol == 'rest'
-      @username, @password = @auth.split(':')
-      @base_url = "https://#{@server}/services/receivers/simple?sourcetype=#{@sourcetype}"
-      @base_url += "&host=#{@host}" if @host
-      @base_url += "&index=#{@index}" if @index
-      @base_url += "&check-index=false" unless @check_index
-    elsif @protocol == 'storm'
-      @username, @password = 'x', @access_token
-      @base_url = "https://#{@api_hostname}/1/inputs/http?index=#{@project_id}&sourcetype=#{@sourcetype}"
-      @base_url += "&host=#{@host}" if @host
+    if @server.match(/,/)
+      @indexers = @server.split(',')
+    else
+      @indexers = [@server]
     end
   end
 
@@ -124,7 +120,7 @@ class SplunkAPIOutput < BufferedOutput
     @http = Net::HTTP::Persistent.new 'fluentd-plugin-splunkapi'
     @http.verify_mode = OpenSSL::SSL::VERIFY_NONE unless @verify
     @http.headers['Content-Type'] = 'text/plain'
-    $log.debug "initialized for #{@base_url}"
+    $log.debug "initialized for splunkapi"
   end
 
   def shutdown
@@ -132,7 +128,7 @@ class SplunkAPIOutput < BufferedOutput
     super
 
     @http.shutdown
-    $log.debug "shutdown from #{@base_url}"
+    $log.debug "shutdown from splunkapi"
   end
 
   def format(tag, time, record)
@@ -158,7 +154,7 @@ class SplunkAPIOutput < BufferedOutput
 
   def write(chunk)
     chunk_to_buffers(chunk).each do |source, messages|
-      uri = URI @base_url + "&source=#{source}"
+      uri = URI get_baseurl + "&source=#{source}"
       post = Net::HTTP::Post.new uri.request_uri
       post.basic_auth @username, @password
       post.body = messages.join('')
@@ -185,6 +181,24 @@ class SplunkAPIOutput < BufferedOutput
         end
       end
     end
+  end
+
+  def get_baseurl
+    base_url = ''
+    if @protocol == 'rest'
+      @username, @password = @auth.split(':')
+      server = @indexers[@idx_indexers];
+      @idx_indexers = (@idx_indexers + 1) % @indexers.length
+      base_url = "https://#{server}/services/receivers/simple?sourcetype=#{@sourcetype}"
+      base_url += "&host=#{@host}" if @host
+      base_url += "&index=#{@index}" if @index
+      base_url += "&check-index=false" unless @check_index
+    elsif @protocol == 'storm'
+      @username, @password = 'x', @access_token
+      base_url = "https://#{@api_hostname}/1/inputs/http?index=#{@project_id}&sourcetype=#{@sourcetype}"
+      base_url += "&host=#{@host}" if @host
+    end
+    base_url
   end
 end
 
