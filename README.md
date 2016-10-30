@@ -1,3 +1,12 @@
+# NOTE: THIS PLUGIN IS OBSOLETE
+
+Splunk recently introduced "HTTP Event Collector (HEC)", which is much better
+than the traditional API used in this plugin:
+
+http://dev.splunk.com/view/event-collector/SP-CAAAE6M
+
+This plugin won't support HEC.  Please try other fluentd plugins or use HEC directly.
+
 # Fluent::Plugin::SplunkAPI, a plugin for [Fluentd](http://fluentd.org)
 
 Splunk output plugin for Fluent event collector.
@@ -52,14 +61,6 @@ this plugin to deliver events to the local forwarder:
       buffer_chunk_limit 8m
       flush_interval 2s
     </match>
-
-## Additional Notes
-
-Splunk 5 has a new feature called "Modular Inputs":
-
-http://blogs.splunk.com/2013/04/16/modular-inputs-tools/
-
-My plan is switching to Modular Inputs rather than staying with APIs.
 
 ## Installation
 
