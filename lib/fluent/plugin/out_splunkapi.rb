@@ -48,6 +48,7 @@ class SplunkAPIOutput < BufferedOutput
   # Formatting
   config_param :time_format, :string, :default => 'localtime'
   config_param :format, :string, :default => 'json'
+  config_param :timestamp_field, :bool, :default => false
 
   config_param :post_retry_max, :integer, :default => 5
   config_param :post_retry_interval, :integer, :default => 5
@@ -72,7 +73,7 @@ class SplunkAPIOutput < BufferedOutput
 
     case @time_format
     when 'none'
-      @time_formatter = nil
+      @time_formatter = lambda { |time| ''}
     when 'unixtime'
       @time_formatter = lambda { |time| time.to_s }
     when 'localtime'
@@ -131,15 +132,22 @@ class SplunkAPIOutput < BufferedOutput
     $log.debug "shutdown from splunkapi"
   end
 
-  def format(tag, time, record)
-    if @time_formatter
-      time_str = "#{@time_formatter.call(time)}: "
+  def time_format(time)
+    if @time_format == 'none'
+      ''
     else
-      time_str = ''
+      "#{@time_formatter.call(time)}: "
     end
+  end
 
-    record.delete('time')
-    event = "#{time_str}#{@formatter.call(record)}\n"
+  def format(tag, time, record)
+    if @timestamp_field
+      record['timestamp'] = @time_formatter.call(time)
+      event = @formatter.call(record)
+    else
+      record.delete('time')
+      event = "#{time_format(time)}#{@formatter.call(record)}"
+    end
 
     [tag, event].to_msgpack
   end
@@ -157,7 +165,7 @@ class SplunkAPIOutput < BufferedOutput
       uri = URI get_baseurl + "&source=#{source}"
       post = Net::HTTP::Post.new uri.request_uri
       post.basic_auth @username, @password
-      post.body = messages.join('')
+      post.body = messages.join("\n")
       $log.debug "POST #{uri}"
       # retry up to :post_retry_max times
       1.upto(@post_retry_max) do |c|
