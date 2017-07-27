@@ -77,6 +77,9 @@ class SplunkAPIOutput < BufferedOutput
       @time_formatter = lambda { |time| time.to_s }
     when 'localtime'
       @time_formatter = lambda { |time| Time.at(time).localtime }
+    when 'splunk'
+      # Extract the 'time' key from the source
+      @time_formatter = "splunk"
     else
       @timef = TimeFormatter.new(@time_format, @localtime)
       @time_formatter = lambda { |time| @timef.format(time) }
@@ -117,7 +120,7 @@ class SplunkAPIOutput < BufferedOutput
 
   def start
     super
-    @http = Net::HTTP::Persistent.new 'fluentd-plugin-splunkapi'
+    @http = Net::HTTP::Persistent.new name: 'fluentd-plugin-splunkapi'
     @http.verify_mode = OpenSSL::SSL::VERIFY_NONE unless @verify
     @http.headers['Content-Type'] = 'text/plain'
     $log.debug "initialized for splunkapi"
@@ -132,10 +135,15 @@ class SplunkAPIOutput < BufferedOutput
   end
 
   def format(tag, time, record)
-    if @time_formatter
-      time_str = "#{@time_formatter.call(time)}: "
+    if @time_formatter == "splunk" and record['time']
+      # Use the regexed 'time' extracted in source
+      time_str = record['time'] + " "
     else
-      time_str = ''
+      if @time_formatter
+        time_str = "#{@time_formatter.call(time)}: "
+      else
+        time_str = ''
+      end
     end
 
     record.delete('time')
