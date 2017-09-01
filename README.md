@@ -148,7 +148,7 @@ Put the following lines to your fluent.conf:
       #
 
       # time_format: the time format of each event
-      # value: none, unixtime, localtime, or any time format string
+      # value: none, unixtime, localtime, splunk (to let Splunk parse it from 'time' key) or any time format string
       # default: localtime
       time_format localtime
 
